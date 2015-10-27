@@ -1,4 +1,7 @@
 - explore: trips
+  sql_always_where: |
+    ${location_valid}
+
 - view: trips
 #   derived_table:
 #     sql: |
@@ -26,14 +29,31 @@
 
   - dimension_group: pickup_datetime
     type: time
-    timeframes: [time, date, week, month]
+    timeframes: [time, date, week, month, year, week_of_year, hour_of_day, day_of_week, minute5, minute10]
     sql: ${TABLE}.pickup_datetime
 
   - dimension_group: dropoff_datetime
     type: time
-    timeframes: [time, date, week, month]
+    timeframes: [time, date, week, month, year, week_of_year, hour_of_day, day_of_week, minute5, minute10]
     sql: ${TABLE}.dropoff_datetime
+    
+  - dimension: pickup_minute10_of_day
+    sql:  SUBSTR(TIME(${pickup_datetime_minute10}), 0, 5)
+    alias: [trips.colin]
+    
+  - dimension: dropoff_minute10_of_day
+    sql: SUBSTR(TIME(${pickup_datetime_minute10}), 0, 5)
 
+  - dimension: likely_destination
+    type: string
+    sql_case:
+      JFK: |
+        ${TABLE}.dropoff_latitude >= 40.76 AND 
+        ${TABLE}.dropoff_latitude <= 40.78 AND 
+        ${TABLE}.dropoff_longitude >= -73.88 AND
+        ${TABLE}.dropoff_longitude <= -73.85
+      Unknown: "true"
+      
   - dimension: store_and_fwd_flag
     type: string
     sql: ${TABLE}.store_and_fwd_flag
@@ -51,6 +71,21 @@
     type: location
     sql_latitude: ${TABLE}.dropoff_latitude
     sql_longitude: ${TABLE}.dropoff_longitude
+
+  - dimension: pickup_location_rounded
+    type: location
+    sql_latitude: round(${TABLE}.pickup_latitude, 3)
+    sql_longitude: round(${TABLE}.pickup_longitude, 3)
+
+  - dimension: dropoff_location_rounded
+    type: location
+    sql_latitude: round(${TABLE}.dropoff_latitude, 3)
+    sql_longitude: round(${TABLE}.dropoff_longitude, 3)
+    
+  - dimension: location_valid
+    type: yesno
+    sql: ${TABLE}.pickup_latitude != 0 AND ${TABLE}.dropoff_latitude != 0
+    hidden: true
 
   - dimension: number_of_passengers
     type: int
@@ -140,3 +175,14 @@
     type: average
     sql: ${tip_percentage}
     value_format: "0.00\"%\""
+
+  - measure: count_who_tipped
+    type: count
+    filters:
+      tipped: Yes
+      
+  - measure: percent_who_tipped
+    type: number
+    sql: (CAST(${count_who_tipped} AS float) / CAST(${count} AS float)) * 100
+    value_format: "0.00\"%\""
+
