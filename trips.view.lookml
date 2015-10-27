@@ -47,12 +47,46 @@
   - dimension: likely_destination
     type: string
     sql_case:
-      JFK: |
+      LaGuardia: |
         ${TABLE}.dropoff_latitude >= 40.76 AND 
         ${TABLE}.dropoff_latitude <= 40.78 AND 
         ${TABLE}.dropoff_longitude >= -73.88 AND
         ${TABLE}.dropoff_longitude <= -73.85
+      Newark: |
+        ${TABLE}.dropoff_latitude >= 40.68 AND 
+        ${TABLE}.dropoff_latitude <= 40.71 AND 
+        ${TABLE}.dropoff_longitude >= -74.18 AND
+        ${TABLE}.dropoff_longitude <= -74.16
+      JFK: |
+        ${TABLE}.dropoff_latitude >= 40.64 AND 
+        ${TABLE}.dropoff_latitude <= 40.65 AND 
+        ${TABLE}.dropoff_longitude >= -73.80 AND
+        ${TABLE}.dropoff_longitude <= -73.78
       Unknown: "true"
+
+  - dimension: likely_origin
+    type: string
+    sql_case:
+      LaGuardia: |
+        ${TABLE}.pickup_latitude >= 40.76 AND 
+        ${TABLE}.pickup_latitude <= 40.78 AND 
+        ${TABLE}.pickup_longitude >= -73.88 AND
+        ${TABLE}.pickup_longitude <= -73.85
+      Newark: |
+        ${TABLE}.pickup_latitude >= 40.68 AND 
+        ${TABLE}.pickup_latitude <= 40.71 AND 
+        ${TABLE}.pickup_longitude >= -74.18 AND
+        ${TABLE}.pickup_longitude <= -74.16
+      JFK: |
+        ${TABLE}.pickup_latitude >= 40.64 AND 
+        ${TABLE}.pickup_latitude <= 40.65 AND 
+        ${TABLE}.pickup_longitude >= -73.80 AND
+        ${TABLE}.pickup_longitude <= -73.78
+      Unknown: "true"
+      
+  - dimension: likely_airport
+    type: yesno
+    sql: ${likely_destination} IN ('LaGuardia', 'Newark', 'JFK') OR ${likely_origin} IN ('LaGuardia', 'Newark', 'JFK')
       
   - dimension: store_and_fwd_flag
     type: string
